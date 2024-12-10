@@ -1,7 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('electronApi', {
-    ipsFunction: async type => {
-        if (type === 'ips')
-            return await ipcRenderer.invoke('getCppIps')
+    getIps: async () => {
+        return await ipcRenderer.invoke('getCppIps')
+    },
+    startNetwork: (ip, port, type) => {
+        ipcRenderer.invoke('startCppNetwork', ip, port, type)
     }
 })

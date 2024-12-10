@@ -1,8 +1,8 @@
 #ifdef WIN32
-#include <WinSock2.h>
+    #include <WinSock2.h>
 #else
-#include <netdb.h>
-#include <arpa/inet.h>
+    #include <netdb.h>
+    #include <arpa/inet.h>
 #endif
 #include <iostream>
 #include <napi.h>
@@ -26,9 +26,20 @@ Napi::String get_ips(const Napi::CallbackInfo &info)
         ips.erase(ips.length() - 1);
     return Napi::String::New(info.Env(), ips.c_str());
 }
+Napi::String start_network(const Napi::CallbackInfo &info)
+{
+    std::string ip = info[0].ToString().Utf8Value();
+    uint16_t port = info[1].As<Napi::Number>().Int32Value();
+    std::string type = info[2].ToString().Utf8Value();
+    if (type.compare("tcp")) {
+    }
+    std::cout << "------------" << ip << " " << port << " " << type << std::endl;
+    return Napi::String::New(info.Env(), ip.c_str());
+}
 Napi::Object init(Napi::Env env, Napi::Object exports)
 {
     exports.Set("getIps", Napi::Function::New(env, get_ips));
+    exports.Set("startNetwork", Napi::Function::New(env, start_network));
     return exports;
 }
 NODE_API_MODULE(addon, init)

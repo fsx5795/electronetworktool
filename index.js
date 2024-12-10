@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    electronApi.ipsFunction('ips').then(value => {
+    const select = document.querySelector('select')
+    electronApi.getIps().then(value => {
         const strList = value.split(',')
-        const select = document.querySelector('select')
         for (let i in strList)
             select.options.add(new Option(strList[i]))
     })
@@ -16,6 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break
             }
         }
-        //webui.startNetwork(select.value, port.value, type)
+        electronApi.startNetwork(select.value, Number(port.value), type)
     })
 })
