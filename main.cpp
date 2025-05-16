@@ -1,3 +1,5 @@
+#include <cstring>
+#include <sys/socket.h>
 #ifdef _WIN32
     #include <WinSock2.h>
 #else
@@ -25,19 +27,26 @@ Napi::String get_ips(const Napi::CallbackInfo &info)
         ips.erase(ips.length() - 1);
     return Napi::String::New(info.Env(), ips.c_str());
 }
-static std::string start_tcp()
+static std::optional<std::string> start_tcp()
 {
     static int sd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sd < 0) {
-    }
+    if (sd < 0)
+        return strerror(errno);
+    sockaddr_in laddr, raddr;
+    laddr.sin_family = AF_INET;
+    laddr.sin_port = htons(9527);
+    inet_pton(AF_INET, INADDR_ANY, &laddr.sin_addr.s_addr);
+    if (bind(sd, reinterpret_cast<sockaddr*>(&laddr), sizeof laddr) < 0)
+        return strerror(errno);
+    return std::nullopt;
 }
 Napi::String start_network(const Napi::CallbackInfo &info)
 {
     std::string ip = info[0].ToString().Utf8Value();
     uint16_t port = info[1].As<Napi::Number>().Int32Value();
     std::string type = info[2].ToString().Utf8Value();
-    if (type.compare("tcp")) {
-    }
+    if (type.compare("tcp"))
+        start_tcp();
     return Napi::String::New(info.Env(), ip.c_str());
 }
 Napi::Object init(Napi::Env env, Napi::Object exports)
