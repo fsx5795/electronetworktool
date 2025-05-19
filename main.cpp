@@ -29,15 +29,36 @@ Napi::String get_ips(const Napi::CallbackInfo &info)
 }
 static std::optional<std::string> start_tcp()
 {
-    static int sd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sd < 0)
+    static int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0)
         return strerror(errno);
-    sockaddr_in laddr, raddr;
-    laddr.sin_family = AF_INET;
-    laddr.sin_port = htons(9527);
-    inet_pton(AF_INET, INADDR_ANY, &laddr.sin_addr.s_addr);
-    if (bind(sd, reinterpret_cast<sockaddr*>(&laddr), sizeof laddr) < 0)
+    sockaddr_in server, client;
+    server.sin_family = AF_INET;
+    server.sin_port = htons(9527);
+    inet_pton(AF_INET, INADDR_ANY, &server.sin_addr.s_addr);
+    if (bind(fd, reinterpret_cast<sockaddr*>(&server), sizeof server) < 0)
         return strerror(errno);
+    if (listen(fd, 8) < 0)
+        return strerror(errno);
+    while (true) {
+        socklen_t clientLen = sizeof client;
+        int csd = accept(fd, reinterpret_cast<sockaddr*>(&client), &clientLen);
+        if (csd >= 0) {
+            char ipstr[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &client.sin_addr, ipstr, INET_ADDRSTRLEN);
+            while (true) {
+                char buf[BUFSIZ] = { '\0' };
+                ssize_t n = recv(csd, buf, sizeof buf, 0);
+                if (n <= 0) {
+                    close(csd);
+                } else {
+                    close(csd);
+                }
+            }
+        } else {
+            continue;
+        }
+    }
     return std::nullopt;
 }
 Napi::String start_network(const Napi::CallbackInfo &info)
