@@ -1,3 +1,6 @@
+function connected(ip, port) {
+    alert(ip)
+}
 document.addEventListener('DOMContentLoaded', () => {
     const select = document.querySelector('select')
     electronApi.getIps().then(value => {
@@ -16,9 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 break
             }
         }
-        electronApi.startNetwork(select.value, Number(port.value), type, connected)
+        const res = electronApi.startNetwork(select.value, Number(port.value), type)
+        if (res != null && res !== '')
+            alert(res)
     })
+    electronApi.onConnected(connected)
 })
-function connected(ip, port) {
-    alert(ip)
-}

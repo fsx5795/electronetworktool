@@ -1,8 +1,9 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const nodecpp = require('./build/Release/nodecpp.node')
+let mainWindow
 app.whenReady().then(() => {
     const path = require('node:path')
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
@@ -20,5 +21,7 @@ ipcMain.handle('getCppIps', (_) => {
     return nodecpp.getIps()
 })
 ipcMain.handle('startCppNetwork', (_, ...args) => {
-    nodecpp.startNetwork(...args)
+    nodecpp.startNetwork(...args, (ip, port) => {
+        mainWindow.webContents.send('connected', ip, port)
+    })
 })
