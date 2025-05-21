@@ -1,5 +1,7 @@
-function connected(ip, port) {
-    alert(ip)
+function connected(ip, port, msg) {
+    console.log(ip)
+    console.log(port)
+    console.log(msg)
 }
 document.addEventListener('DOMContentLoaded', () => {
     const select = document.querySelector('select')

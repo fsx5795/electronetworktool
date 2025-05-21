@@ -21,7 +21,7 @@ ipcMain.handle('getCppIps', (_) => {
     return nodecpp.getIps()
 })
 ipcMain.handle('startCppNetwork', (_, ...args) => {
-    nodecpp.startNetwork(...args, (ip, port) => {
-        mainWindow.webContents.send('connected', ip, port)
+    nodecpp.startNetwork(...args, (ip, port, msg) => {
+        mainWindow.webContents.send('connected', ip, port, msg)
     })
 })

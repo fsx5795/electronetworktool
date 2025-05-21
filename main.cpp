@@ -29,47 +29,44 @@ Napi::String get_ips(const Napi::CallbackInfo &info)
         ips.erase(ips.length() - 1);
     return Napi::String::New(info.Env(), ips.c_str());
 }
-static std::optional<std::string> start_tcp(std::string_view ip, const Napi::Env &env, const Napi::Function &&fun)
+static std::optional<std::string> start_tcp(std::string_view ip, unsigned short port, const Napi::Env &env, const Napi::Function &&fun)
 {
     static int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
         return strerror(errno);
     sockaddr_in server, client;
     server.sin_family = AF_INET;
-    server.sin_port = htons(9527);
+    server.sin_port = htons(port);
     inet_pton(AF_INET, ip.data(), &server.sin_addr.s_addr);
     if (bind(fd, reinterpret_cast<sockaddr*>(&server), sizeof server) < 0)
         return strerror(errno);
     if (listen(fd, 8) < 0)
         return strerror(errno);
-    while (true) {
+    //while (true) {
         socklen_t clientLen = sizeof client;
         int csd = accept(fd, reinterpret_cast<sockaddr*>(&client), &clientLen);
         if (csd >= 0) {
             char ipstr[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &client.sin_addr, ipstr, INET_ADDRSTRLEN);
-            fun.Call(env.Global(), {Napi::String::New(env, ipstr), Napi::Number::New(env, client.sin_port)});
-            while (true) {
+            //while (true) {
                 char buf[BUFSIZ] = { '\0' };
                 auto n = recv(csd, buf, sizeof buf, 0);
-                if (n <= 0) {
+                if (n < 0) {
+                    return strerror(errno);
+                } else if (n == 0) {
                 #ifdef _WIN32
-                    closesocket(csd);
+                    //closesocket(csd);
                 #else
                     close(csd);
                 #endif
                 } else {
-                #ifdef _WIN32
-                    closesocket(csd);
-                #else
-                    close(csd);
-                #endif
+                    fun.Call(env.Global(), {Napi::String::New(env, ipstr), Napi::Number::New(env, client.sin_port), Napi::String::New(env, buf)});
                 }
-            }
+            //}
         } else {
-            continue;
+            //continue;
         }
-    }
+    //}
     return std::nullopt;
 }
 Napi::String start_network(const Napi::CallbackInfo &info)
@@ -78,8 +75,8 @@ Napi::String start_network(const Napi::CallbackInfo &info)
     std::string ip = info[0].ToString().Utf8Value();
     uint16_t port = info[1].As<Napi::Number>().Int32Value();
     std::string type = info[2].ToString().Utf8Value();
-    if (type.compare("tcp")) {
-        std::optional<std::string> res = start_tcp(ip, env, info[3].As<Napi::Function>());
+    if (type.compare("tcp") == 0) {
+        std::optional<std::string> res = start_tcp(ip, port, env, info[3].As<Napi::Function>());
         if (res.has_value())
             return Napi::String::New(env, res.value());
     }
