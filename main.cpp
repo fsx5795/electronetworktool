@@ -27,6 +27,9 @@ Napi::String get_ips(const Napi::CallbackInfo &info)
         ips.erase(ips.length() - 1);
     return Napi::String::New(info.Env(), ips.c_str());
 }
+static void connected(const std::string_view, short)
+{
+}
 static std::optional<std::string> start_tcp()
 {
     static int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -63,9 +66,12 @@ static std::optional<std::string> start_tcp()
 }
 Napi::String start_network(const Napi::CallbackInfo &info)
 {
+    Napi::Env env = info.Env();
     std::string ip = info[0].ToString().Utf8Value();
     uint16_t port = info[1].As<Napi::Number>().Int32Value();
     std::string type = info[2].ToString().Utf8Value();
+    Napi::Function connectFunc = info[3].As<Napi::Function>();
+    connectFunc.Call(env.Global(), {Napi::String::New(env, "hello")});
     if (type.compare("tcp"))
         start_tcp();
     return Napi::String::New(info.Env(), ip.c_str());

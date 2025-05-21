@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 break
             }
         }
-        electronApi.startNetwork(select.value, Number(port.value), type)
+        electronApi.startNetwork(select.value, Number(port.value), type, connected)
     })
 })
+function connected(ip, port) {
+    alert(ip)
+}
