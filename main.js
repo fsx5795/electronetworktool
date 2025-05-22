@@ -17,11 +17,14 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     app.quit()
 })
-ipcMain.handle('getCppIps', (_) => {
+ipcMain.handle('get-cpp-ips', (_) => {
     return nodecpp.getIps()
 })
-ipcMain.handle('startCppNetwork', (_, ...args) => {
+ipcMain.handle('start-cpp-network', (_, ...args) => {
     nodecpp.startNetwork(...args, (ip, port, msg) => {
         mainWindow.webContents.send('connected', ip, port, msg)
     })
+})
+ipcMain.handle('send-client', (_, ...args) => {
+    nodecpp.sendClient(...args)
 })

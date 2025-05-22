@@ -7,19 +7,27 @@
         <title>network</title>
     </head>
     <body>
-        <article>
-            <label>本机地址</label>
-            <select></select>
-            <label>本机端口</label>
-            <input type="number" id="port" />
+        <main>
+            <article>
+                <label>本机地址</label>
+                <select></select>
+                <label>本机端口</label>
+                <input type="number" id="port" />
+                <div>
+                    <label>TCP</label>
+                    <input type="radio" name="network" value="tcp" checked />
+                    <label>UDP</label>
+                    <input type="radio" name="network" value="udp" />
+                </div>
+                <button>开始</button>
+            </article>
             <div>
-                <label>TCP</label>
-                <input type="radio" name="network" value="tcp" checked />
-                <label>UDP</label>
-                <input type="radio" name="network" value="udp" />
+                <textarea></textarea>
+                <div>
+                    <input type="text" id="msg">
+                    <button>发送</button>
+                </div>
             </div>
-            <button>开始</button>
-        </article>
-        <textarea></textarea>
+        </main>
     </body>
 </html>

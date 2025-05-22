@@ -1,4 +1,7 @@
+let curIp, curPort
 function connected(ip, port, msg) {
+    curIp = ip
+    curPort = port
     console.log(ip)
     console.log(port)
     console.log(msg)
@@ -12,18 +15,21 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     const btn = document.querySelector('button')
     btn.addEventListener('click', () => {
-        const port = document.getElementById('port')
-        const radios = document.getElementsByName('network')
-        let type
-        for (let i in radios) {
-            if (radios[i].checked == true) {
-                type = radios[i].value
-                break
+        if (btn.textContent === '开始') {
+            const port = document.getElementById('port')
+            const radios = document.getElementsByName('network')
+            let type
+            for (let i in radios) {
+                if (radios[i].checked == true) {
+                    type = radios[i].value
+                    break
+                }
             }
+            electronApi.startNetwork(select.value, Number(port.value), type)
+        } else {
+            const input = document.getElementById('msg')
+            electronApi.sendClient(curIp, curPort, input.value)
         }
-        const res = electronApi.startNetwork(select.value, Number(port.value), type)
-        if (res != null && res !== '')
-            alert(res)
     })
     electronApi.onConnected(connected)
 })
