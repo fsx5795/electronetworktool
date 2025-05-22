@@ -9,6 +9,7 @@
     #include <sys/socket.h>
     #include <arpa/inet.h>
 #endif
+#include <thread>
 #include <napi.h>
 static Napi::ThreadSafeFunction showInfo;
 static std::unordered_map<int, std::string> clients;
@@ -32,7 +33,7 @@ Napi::String get_ips(const Napi::CallbackInfo &info)
         ips.erase(ips.length() - 1);
     return Napi::String::New(info.Env(), ips.c_str());
 }
-static void recv_msg(int csd, const Napi::Env &env, char *ipstr, USHORT port)
+static void recv_msg(int csd, const Napi::Env &env, char *ipstr, unsigned short port)
 {
     while (true) {
         char buf[BUFSIZ] = { '\0' };
