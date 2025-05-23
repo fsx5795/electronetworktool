@@ -1,24 +1,22 @@
+#include <string>
 #ifdef _WIN32
     #include <WinSock2.h>
 #else
-    /*
     #include <unistd.h>
     #include <netdb.h>
-    #include <sys/socket.h>
     #include <arpa/inet.h>
-    */
 #endif
 #include "tcp.h"
-Napi::Value set_callback(const Napi::CallbackInfo &info)
+static Napi::Value set_callback(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() < 2 || !info[0].IsFunction() || !info[1].IsFunction())
         throw Napi::TypeError::New(env, "arg type is error!");
-    connect = Napi::ThreadSafeFunction::New(env, info[0].As<Napi::Function>(), "connected", 0, 1);
+    netLink = Napi::ThreadSafeFunction::New(env, info[0].As<Napi::Function>(), "netLinked", 0, 1);
     showInfo = Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "showInfo", 0, 1);
     return env.Null();
 }
-Napi::Array get_ips(const Napi::CallbackInfo &info)
+static Napi::Array get_ips(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     char buf[20] = { '\0' };
@@ -39,7 +37,7 @@ Napi::Array get_ips(const Napi::CallbackInfo &info)
         result[i] = Napi::String::New(env, ips.at(i));
     return result;
 }
-Napi::Value send_client(const Napi::CallbackInfo &info)
+static Napi::Value send_client(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() < 3 || !info[0].IsString() || !info[1].IsNumber() || !info[2].IsString())
@@ -52,7 +50,7 @@ Napi::Value send_client(const Napi::CallbackInfo &info)
     }
     return env.Null();
 }
-Napi::Value start_network(const Napi::CallbackInfo &info)
+static Napi::Value start_network(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() < 3 || !info[0].IsString() || !info[1].IsNumber() || !info[2].IsString())
@@ -64,7 +62,7 @@ Napi::Value start_network(const Napi::CallbackInfo &info)
         start_tcp(ip, port, env);
     return env.Null();
 }
-Napi::Object init(Napi::Env env, Napi::Object exports)
+static Napi::Object init(Napi::Env env, Napi::Object exports)
 {
     exports.Set("setCallback", Napi::Function::New(env, set_callback));
     exports.Set("getIps", Napi::Function::New(env, get_ips));

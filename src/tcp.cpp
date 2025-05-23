@@ -3,18 +3,16 @@
 	#define _WIN32_WINNT 0x0600
 	#include <ws2tcpip.h>
 #else
-    /*
+    #include <sys/socket.h>
     #include <unistd.h>
     #include <netdb.h>
-    #include <sys/socket.h>
     #include <arpa/inet.h>
-    */
 #endif
 #include <thread>
 #include "tcp.h"
 
 std::unordered_map<int, std::string> clients;
-Napi::ThreadSafeFunction connect, showInfo;
+Napi::ThreadSafeFunction netLink, showInfo;
 static void recv_msg(int csd, const Napi::Env &env, char *ipstr, unsigned short port)
 {
     while (true) {
@@ -24,7 +22,7 @@ static void recv_msg(int csd, const Napi::Env &env, char *ipstr, unsigned short 
             throw Napi::Error::New(env, strerror(errno));
         } else if (n == 0) {
             clients.erase(csd);
-            connect.BlockingCall([&ipstr, port] (Napi::Env env, Napi::Function callback) {
+            netLink.BlockingCall([&ipstr, port] (Napi::Env env, Napi::Function callback) {
                 callback.Call({Napi::Boolean::New(env, true), Napi::String::New(env, ipstr), Napi::Number::New(env, port)});
             });
         #ifdef _WIN32
@@ -51,7 +49,7 @@ static void run_tcp(const Napi::Env &env, int fd, std::string_view ip, unsigned 
             inet_ntop(AF_INET, &client.sin_addr, ipstr, INET_ADDRSTRLEN);
             clients.emplace(csd, ipstr);
             unsigned short port = client.sin_port;
-            connected.BlockingCall([&ipstr, port] (Napi::Env env, Napi::Function callback) {
+            netLink.BlockingCall([&ipstr, port] (Napi::Env env, Napi::Function callback) {
                 callback.Call({Napi::Boolean::New(env, false), Napi::String::New(env, ipstr), Napi::Number::New(env, port)});
             });
             std::thread(recv_msg, csd, std::cref(env), ipstr, client.sin_port).detach();

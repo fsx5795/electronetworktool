@@ -1,5 +1,5 @@
 let otherSelect
-function connect(un, ip, port) {
+function netLink(un, ip, port) {
     if (un) {
         const options = Array.from(otherSelect.options)
         const rmOpt = options.find(opt => opt.text === ip)
@@ -38,10 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const input = document.getElementById('msg')
                 const index = otherSelect.selectedIndex
-                electronApi.sendClient(otherSelect.options[index].text, otherSelect.options[index].value, input.value)
+                electronApi.sendClient(otherSelect.options[index].text, Number(otherSelect.options[index].value), input.value)
             }
         })
     }
     electronApi.onShowInfo(showInfo)
-    electronApi.onConnect(connect)
+    electronApi.onNetLink(netLink)
 })

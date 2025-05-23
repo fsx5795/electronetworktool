@@ -19,7 +19,7 @@ app.on('window-all-closed', () => {
 })
 ipcMain.handle('set-callback', (_) => {
     nodecpp.setCallback((un, ip, port) => {
-        mainWindow.webContents.send('connect', un, ip, port)
+        mainWindow.webContents.send('net-link', un, ip, port)
     }, (ip, port, msg) => {
         mainWindow.webContents.send('show-info', ip, port, msg)
     })
