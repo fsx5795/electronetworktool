@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="index.css" />
+        <script src="index.js"></script>
+        <title>network</title>
+    </head>
+    <body>
+        <main>
+            <article>
+                <label>本机地址</label>
+                <select id="local"></select>
+                <label>本机端口</label>
+                <input type="number" id="port" />
+                <div>
+                    <label>TCP</label>
+                    <input type="radio" name="network" value="tcp" checked />
+                    <label>UDP</label>
+                    <input type="radio" name="network" value="udp" />
+                </div>
+                <button>开始</button>
+            </article>
+            <div>
+                <textarea></textarea>
+                <div>
+                    <select id="other"></select>
+                    <input type="text" id="msg">
+                    <button>发送</button>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
