@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btns = document.getElementsByTagName('button')
     for (let btn of btns) {
         btn.addEventListener('click', () => {
+            const port = document.getElementById('port')
             if (btn.textContent === '开始') {
-                const port = document.getElementById('port')
                 const radios = document.getElementsByName('network')
                 let type
                 for (let i in radios) {
@@ -38,7 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const input = document.getElementById('msg')
                 const index = otherSelect.selectedIndex
-                electronApi.sendClient(otherSelect.options[index].text, Number(otherSelect.options[index].value), input.value)
+                if (electronApi.sendClient(otherSelect.options[index].text, Number(otherSelect.options[index].value), input.value)) {
+                    showInfo(localSelect.value, Number(port.value), input.value)
+                    input.value = ''
+                }
             }
         })
     }

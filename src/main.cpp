@@ -37,7 +37,7 @@ static Napi::Array get_ips(const Napi::CallbackInfo &info)
         result[i] = Napi::String::New(env, ips.at(i));
     return result;
 }
-static Napi::Value send_client(const Napi::CallbackInfo &info)
+static Napi::Boolean send_client(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() < 3 || !info[0].IsString() || !info[1].IsNumber() || !info[2].IsString())
@@ -45,10 +45,10 @@ static Napi::Value send_client(const Napi::CallbackInfo &info)
     for (auto &[csd, ipstr] : clients) {
         if (ipstr.compare(info[0].ToString().Utf8Value()) == 0) {
             std::string msg = info[2].ToString().Utf8Value();
-            send(csd, msg.c_str(), msg.length(), 0);
+            return Napi::Boolean::New(env, send(csd, msg.c_str(), msg.length(), 0) != -1);
         }
     }
-    return env.Null();
+    return Napi::Boolean(env, false);
 }
 static Napi::Value start_network(const Napi::CallbackInfo &info)
 {
