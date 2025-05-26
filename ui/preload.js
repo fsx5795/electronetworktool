@@ -4,7 +4,8 @@ contextBridge.exposeInMainWorld('electronApi', {
     getIps: async () => {
         return await ipcRenderer.invoke('get-cpp-ips')
     },
-    startNetwork: (ip, port, type) => ipcRenderer.invoke('start-cpp-network', ip, port, type),
+    startNetwork: (ip, port, type) => ipcRenderer.invoke('start-network', ip, port, type),
+    stopNetwork: () => ipcRenderer.invoke('stop-network'),
     sendClient: (ip, port, msg) => {
         return ipcRenderer.invoke('send-client', ip, port, msg)
     },

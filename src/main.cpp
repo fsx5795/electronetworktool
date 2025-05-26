@@ -48,7 +48,7 @@ static Napi::Boolean send_client(const Napi::CallbackInfo &info)
             return Napi::Boolean::New(env, send(csd, msg.c_str(), msg.length(), 0) != -1);
         }
     }
-    return Napi::Boolean(env, false);
+    return Napi::Boolean::New(env, false);
 }
 static Napi::Value start_network(const Napi::CallbackInfo &info)
 {
@@ -62,11 +62,17 @@ static Napi::Value start_network(const Napi::CallbackInfo &info)
         start_tcp(ip, port, env);
     return env.Null();
 }
+static Napi::Value stop_network(const Napi::CallbackInfo &info)
+{
+    stop_tcp();
+    return info.Env().Null();
+}
 static Napi::Object init(Napi::Env env, Napi::Object exports)
 {
     exports.Set("setCallback", Napi::Function::New(env, set_callback));
     exports.Set("getIps", Napi::Function::New(env, get_ips));
     exports.Set("startNetwork", Napi::Function::New(env, start_network));
+    exports.Set("stopNetwork", Napi::Function::New(env, stop_network));
     exports.Set("sendClient", Napi::Function::New(env, send_client));
     return exports;
 }

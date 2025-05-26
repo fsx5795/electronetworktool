@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 electronApi.startNetwork(localSelect.value, Number(port.value), type)
+                btn.textContent = '停止'
+            } else if (btn.textContent === '停止') {
+                electronApi.stopNetwork()
             } else {
                 const input = document.getElementById('msg')
                 const index = otherSelect.selectedIndex

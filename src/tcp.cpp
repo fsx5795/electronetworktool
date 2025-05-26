@@ -1,5 +1,5 @@
 #include <cstring>
-#ifdef _WIN32
+#ifdef WIN32
 	#define _WIN32_WINNT 0x0600
 	#include <ws2tcpip.h>
 #else
@@ -11,11 +11,19 @@
 #include <thread>
 #include "tcp.h"
 
+static bool running{true};
 std::unordered_map<int, std::string> clients;
 Napi::ThreadSafeFunction netLink, showInfo;
+
+#ifdef WIN32
+static SOCKET fd = INVALID_SOCKET;
+#else
+static int fd = -1;
+#endif
+
 static void recv_msg(int csd, const Napi::Env &env, char *ipstr, unsigned short port)
 {
-    while (true) {
+    while (running) {
         char buf[BUFSIZ] = { '\0' };
         auto n = recv(csd, buf, sizeof buf, 0);
         if (n < 0) {
@@ -25,11 +33,11 @@ static void recv_msg(int csd, const Napi::Env &env, char *ipstr, unsigned short 
             netLink.BlockingCall([&ipstr, port] (Napi::Env env, Napi::Function callback) {
                 callback.Call({Napi::Boolean::New(env, true), Napi::String::New(env, ipstr), Napi::Number::New(env, port)});
             });
-        #ifdef _WIN32
+#ifdef WIN32
             closesocket(csd);
-        #else
+#else
             close(csd);
-        #endif
+#endif
             break;
         } else {
             showInfo.BlockingCall([&ipstr, &port, buf] (Napi::Env env, Napi::Function callback) {
@@ -38,10 +46,10 @@ static void recv_msg(int csd, const Napi::Env &env, char *ipstr, unsigned short 
         }
     }
 }
-static void run_tcp(const Napi::Env &env, int fd, std::string_view ip, unsigned short port)
+static void run_tcp(const Napi::Env &env, std::string_view ip, unsigned short port)
 {
     sockaddr_in client;
-    while (true) {
+    while (running) {
         socklen_t clientLen = sizeof client;
         int csd = accept(fd, reinterpret_cast<sockaddr*>(&client), &clientLen);
         if (csd >= 0) {
@@ -58,16 +66,52 @@ static void run_tcp(const Napi::Env &env, int fd, std::string_view ip, unsigned 
 }
 void start_tcp(std::string_view ip, unsigned short port, const Napi::Env &env)
 {
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0)
-        throw Napi::Error::New(env, strerror(errno));
-    sockaddr_in server;
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-    inet_pton(AF_INET, ip.data(), &server.sin_addr.s_addr);
-    if (bind(fd, reinterpret_cast<sockaddr*>(&server), sizeof server) < 0)
-        throw Napi::Error::New(env, strerror(errno));
-    if (listen(fd, 8) < 0)
-        throw Napi::Error::New(env, strerror(errno));
-    std::thread(run_tcp, env, fd, ip, port).detach();
+    if (fd < 0) {
+        running = true;
+        fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (fd < 0)
+            throw Napi::Error::New(env, strerror(errno));
+        sockaddr_in server;
+        server.sin_family = AF_INET;
+        server.sin_port = htons(port);
+        inet_pton(AF_INET, ip.data(), &server.sin_addr.s_addr);
+        if (bind(fd, reinterpret_cast<sockaddr*>(&server), sizeof server) < 0) {
+#ifdef WIN32
+            closesocket(fd);
+#else
+            close(fd);
+#endif
+            throw Napi::Error::New(env, strerror(errno));
+        }
+        if (listen(fd, 8) < 0) {
+#ifdef WIN32
+            closesocket(fd);
+#else
+            close(fd);
+#endif
+            throw Napi::Error::New(env, strerror(errno));
+        }
+        std::thread(run_tcp, env, ip, port).detach();
+    }
+}
+void stop_tcp()
+{
+    running = false;
+    if (fd >= 0) {
+#ifdef WIN32
+        shutdown(fd, SD_BOTH);
+        closesocket(fd);
+#else
+        shutdown(fd, SHUT_SHUT_RDWR);
+        close(fd);
+#endif
+    }
+    for (const auto &pair : clients) {
+#ifdef WIN32
+        closesocket(pair.first);
+#else
+        close(pair.first);
+#endif
+    }
+    clients.clear();
 }

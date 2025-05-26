@@ -25,7 +25,8 @@ ipcMain.handle('set-callback', (_) => {
     })
 })
 ipcMain.handle('get-cpp-ips', (_) => nodecpp.getIps())
-ipcMain.handle('start-cpp-network', (_, ...args) => {
+ipcMain.handle('stop-network', (_) => nodecpp.stopNetwork())
+ipcMain.handle('start-network', (_, ...args) => {
     nodecpp.startNetwork(...args)
 })
 ipcMain.handle('send-client', (_, ...args) => {
