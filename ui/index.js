@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.textContent = '停止'
             } else if (btn.textContent === '停止') {
                 electronApi.stopNetwork()
+                btn.textContent = '开始'
             } else {
                 const input = document.getElementById('msg')
                 const index = otherSelect.selectedIndex

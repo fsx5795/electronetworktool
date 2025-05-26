@@ -27,7 +27,10 @@ static void recv_msg(int csd, const Napi::Env &env, char *ipstr, unsigned short 
         char buf[BUFSIZ] = { '\0' };
         auto n = recv(csd, buf, sizeof buf, 0);
         if (n < 0) {
-            throw Napi::Error::New(env, strerror(errno));
+            if (running)
+                throw Napi::Error::New(env, strerror(errno));
+            else
+                break;
         } else if (n == 0) {
             clients.erase(csd);
             netLink.BlockingCall([&ipstr, port] (Napi::Env env, Napi::Function callback) {
@@ -102,7 +105,7 @@ void stop_tcp()
         shutdown(fd, SD_BOTH);
         closesocket(fd);
 #else
-        shutdown(fd, SHUT_SHUT_RDWR);
+        shutdown(fd, SHUT_RDWR);
         close(fd);
 #endif
     }
@@ -114,4 +117,6 @@ void stop_tcp()
 #endif
     }
     clients.clear();
+    netLink.Release();
+    showInfo.Release();
 }
