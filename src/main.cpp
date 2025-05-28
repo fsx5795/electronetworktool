@@ -1,4 +1,3 @@
-#include <string>
 #ifdef _WIN32
     #include <WinSock2.h>
 #else
@@ -6,14 +5,25 @@
     #include <netdb.h>
     #include <arpa/inet.h>
 #endif
+#include <string>
+#include <memory>
 #include "tcp.h"
+
+static std::unique_ptr<TcpServer> tcpServer;
+
 static Napi::Value set_callback(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() < 2 || !info[0].IsFunction() || !info[1].IsFunction())
         throw Napi::TypeError::New(env, "arg type is error!");
+    /*
     netLink = Napi::ThreadSafeFunction::New(env, info[0].As<Napi::Function>(), "netLinked", 0, 1);
     showInfo = Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "showInfo", 0, 1);
+    */
+    if (tcpServer == nullptr)
+        tcpServer = std::make_unique<TcpServer>();
+    tcpServer->set_callbacks(Napi::ThreadSafeFunction::New(env, info[0].As<Napi::Function>(), "netLinked", 0, 1), Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "showInfo", 0, 1));
+
     return env.Null();
 }
 static Napi::Array get_ips(const Napi::CallbackInfo &info)
@@ -42,29 +52,46 @@ static Napi::Boolean send_client(const Napi::CallbackInfo &info)
     Napi::Env env = info.Env();
     if (info.Length() < 3 || !info[0].IsString() || !info[1].IsNumber() || !info[2].IsString())
         throw Napi::TypeError::New(env, "arg type is error!");
+
+    if (tcpServer == nullptr)
+        return Napi::Boolean::New(env, false);
+
+    /*
     for (auto &[csd, ipstr] : clients) {
         if (ipstr.compare(info[0].ToString().Utf8Value()) == 0) {
             std::string msg = info[2].ToString().Utf8Value();
             return Napi::Boolean::New(env, send(csd, msg.c_str(), msg.length(), 0) != -1);
         }
     }
-    return Napi::Boolean::New(env, false);
+    */
+    auto success = tcpServer->send_client(info[0].ToString().Utf8Value(), info[2].ToString().Utf8Value());
+    //return Napi::Boolean::New(env, false);
+    return Napi::Boolean::New(env, success);
 }
 static Napi::Value start_network(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() < 3 || !info[0].IsString() || !info[1].IsNumber() || !info[2].IsString())
         throw Napi::TypeError::New(env, "arg type is error!");
+
+    if (tcpServer == nullptr)
+        tcpServer = std::make_unique<TcpServer>();
+
     std::string ip = info[0].ToString().Utf8Value();
     uint16_t port = info[1].As<Napi::Number>().Int32Value();
     std::string type = info[2].ToString().Utf8Value();
     if (type.compare("tcp") == 0)
-        start_tcp(ip, port, env);
+        //start_tcp(ip, port, env);
+        tcpServer->start(ip, port, env);
     return env.Null();
 }
 static Napi::Value stop_network(const Napi::CallbackInfo &info)
 {
-    stop_tcp();
+    //stop_tcp();
+    if (tcpServer != nullptr) {
+        tcpServer->stop();
+        tcpServer.reset();
+    }
     return info.Env().Null();
 }
 static Napi::Object init(Napi::Env env, Napi::Object exports)
